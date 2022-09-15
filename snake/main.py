@@ -7,12 +7,18 @@ import time
 # initialization 
 pygame.init()
 
+pygame.mixer.init()
+game_music = pygame.mixer.Sound('./sound/gamesound.wav')
+game_music.set_volume(0.2)
+point_sound = pygame.mixer.Sound('./sound/point.wav')
+point_sound.set_volume(0.7)
 # global var
 size = (1080, 720)
 COLOR = (255, 255, 255)
 SCORE = 0
 SPEED = 30
 DIRECTION = [SPEED, 0]
+is_play = False
 FPS = pygame.time.Clock()
 font = pygame.font.SysFont(None, 32)
 # params
@@ -37,6 +43,16 @@ def load_img(src, x, y):
     image.set_colorkey(transparent)
     return image, rect 
 
+def start(): 
+    global KEYS, SPEED, is_play
+
+    if(KEYS[K_SPACE]):
+        is_play = True
+    
+    text = font.render(f'Press SPACE for start', True, COLOR)
+    text_rect = text.get_rect(center=(540,360))
+    screen.blit(text, text_rect)
+
 def pickup():
     global apple_rect, head_rect, SCORE, snake
 
@@ -45,6 +61,7 @@ def pickup():
         apple_rect.y = randint(40, 680)
         snake.append(snake[1].copy())
         SCORE += 1
+        point_sound.play()
 
 def score():
     global SCORE, COLOR
@@ -73,20 +90,20 @@ def move(obj, body):
     elif obj.top < 0:
         obj.top = 700
 
-    for el in range( (len(body) - 1), 0, -1): 
-        body[el].x = body[el-1].x
-        body[el].y = body[el-1].y
+    for i in range(len(body) - 1, 0, -1):
+        body[i].x = body[i-1].x
+        body[i].y = body[i-1].y
     
     obj.move_ip(DIRECTION)
-
-
-
+    
+    
 # variables 
 head_image, head_rect = load_img('./img/head.png', 400, 300)
 apple_image, apple_rect = load_img('./img/apple.png', 200, 200)
 body_image, body_rect = load_img('./img/body.png', 370, 300)
 
 snake = [head_rect, body_rect] 
+game_music.play()
 
 while True: 
     screen.fill((0, 0, 0))
@@ -94,8 +111,14 @@ while True:
         if event.type == QUIT: 
             pygame.quit()
             exit()
-    
     KEYS = pygame.key.get_pressed()
+    
+    if( is_play == False ): 
+        start()
+        pygame.display.update()
+        FPS.tick(15)
+        continue
+    
     screen.blit(apple_image, apple_rect)
     screen.blit(head_image, head_rect)
     for el in snake[1:]:
@@ -111,4 +134,4 @@ while True:
         SPEED = 0
 
     pygame.display.update()
-    FPS.tick(15)
+    FPS.tick(10)
